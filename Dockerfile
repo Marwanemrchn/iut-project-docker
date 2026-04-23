@@ -1,17 +1,18 @@
-FROM ubuntu:24.04
-
-
-RUN apt update && \
-    apt install -y \
-        openjdk-25-jdk && \
-    apt clean
+FROM eclipse-temurin:25-jdk AS builder
 
 WORKDIR /app
 
 COPY . .
 
-RUN ./gradlew build -x test --no-daemon
+RUN chmod +x gradlew
 
-EXPOSE 8080
+RUN ./gradlew build --no-daemon -x test 
 
-CMD ["java", "-jar", "build/libs/app.jar"]
+
+FROM eclipse-temurin:25-jre
+
+WORKDIR /app
+
+COPY --from=builder /app/build/libs/app.jar ./app.jar
+
+ENTRYPOINT ["java", "-jar", "app.jar"]
